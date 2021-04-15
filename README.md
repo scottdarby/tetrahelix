@@ -1,6 +1,6 @@
 # Scott Darby - TetraHelix Audio-Visualiser
 
-![Screenshot](http://scottdarby.com/archive/3d/tetra_growth.jpg)
+![Screenshot](https://raw.githubusercontent.com/scottdarby/tetrahelix/master/screenshot.jpg)
 
 ## Description
 
