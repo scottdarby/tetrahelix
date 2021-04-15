@@ -5,7 +5,6 @@ const OrbitControls = OrbitConstructor(THREE)
 const glslify = require('glslify');
 
 (function () {
-  let holoplay
   let renderer
   let scene
   let objectMeshes1 = []
@@ -92,10 +91,10 @@ const glslify = require('glslify');
     container.classList.toggle('hide')
     document.body.removeChild(renderer.domElement)
     scene = null
-    camera = null
     controls = null
     sound = null
     analyser = null
+    currentFrame = null
   }
 
   function mousedown () {
@@ -135,11 +134,6 @@ const glslify = require('glslify');
     renderer = new THREE.WebGLRenderer({
       antialias: true
     })
-
-    // renderer.autoClear = false
-
-    // renderer.toneMapping = THREE.ACESFilmicToneMapping
-    // renderer.toneMappingExposure = 0.5
 
     renderer.setSize(window.innerWidth, window.innerHeight)
     document.body.appendChild(renderer.domElement)
@@ -237,8 +231,6 @@ const glslify = require('glslify');
     }
 
     window.addEventListener('resize', onWindowResize, false)
-
-    holoplay = new HoloPlay(scene, camera, renderer)
   }
 
   function animateCamPos () {
@@ -294,7 +286,7 @@ const glslify = require('glslify');
 
       let position = new THREE.BufferAttribute(allVertices[channel], 3)
 
-      geometry.addAttribute('position', position)
+      geometry.setAttribute('position', position)
 
       objectMeshes1[channel] = new THREE.Mesh(geometry, materials[channel])
       objectMeshes1[channel].frustumCulled = false
@@ -517,13 +509,13 @@ const glslify = require('glslify');
     movementRate += clock.getDelta()
     currentFrame++
 
-    if (!cameraAnimating) {
+    if (!cameraAnimating && controls) {
       controls.update()
     }
 
     TWEEN.update()
 
-    if (sound.isPlaying) {
+    if (sound && sound.isPlaying) {
       if (!started) {
         started = true
         loader.classList.toggle('hide')
@@ -588,17 +580,14 @@ const glslify = require('glslify');
 
         grow(initFaces[channel], channel)
       }
+
+      renderer.render(scene, camera)
     } else {
       // once track has finished, restart
       if (started) {
         started = false
         reset()
-        return
       }
     }
-
-    // renderer.render(scene, camera)
-    // holoplay.render(scene, camera, renderer)
-    holoplay.render()
   }
 })()
