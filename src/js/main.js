@@ -65,6 +65,7 @@ const glslify = require('glslify');
   let defaultCamEasing = TWEEN.Easing.Quadratic.InOut
   let camMoveTween
   let userInteracting = false
+  let isPaused = false
 
   const startButton = document.querySelectorAll('#button-container')[0]
   const loader = document.querySelectorAll('#loader')[0]
@@ -95,6 +96,13 @@ const glslify = require('glslify');
     sound = null
     analyser = null
     currentFrame = null
+  }
+
+  function keyup (e) {
+    if (e.code === 'Space') {
+      isPaused = !isPaused
+      userInteracting = isPaused
+    }
   }
 
   function mousedown () {
@@ -132,7 +140,8 @@ const glslify = require('glslify');
     movementRate = 0
 
     renderer = new THREE.WebGLRenderer({
-      antialias: true
+      antialias: true,
+      powerPreference: 'high-performance'
     })
 
     renderer.setSize(window.innerWidth, window.innerHeight)
@@ -140,16 +149,16 @@ const glslify = require('glslify');
 
     scene = new THREE.Scene()
 
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 300)
-    camera.position.set(0, 0, 1.8)
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 10)
+    camera.position.set(0, 0, 1.5)
     scene.add(camera)
 
     controls = new OrbitControls(camera, renderer.domElement)
-    controls.minDistance = 1.5
-    controls.maxDistance = 200
+    controls.minDistance = 1.0
+    controls.maxDistance = 5
     controls.enablePan = false
     controls.zoomSpeed = 0.7
-    controls.rotateSpeed = 0.04
+    controls.rotateSpeed = 0.03
     controls.enableDamping = true
     controls.dampingFactor = 0.04
 
@@ -174,6 +183,7 @@ const glslify = require('glslify');
     renderer.domElement.addEventListener('wheel', userInteraction)
     document.addEventListener('touchstart', touchstart)
     document.addEventListener('touchend', touchend)
+    document.addEventListener('keyup', keyup)
 
     let pointsUniforms = THREE.ShaderLib.points.uniforms
 
@@ -187,7 +197,7 @@ const glslify = require('glslify');
       value: 0
     }
 
-    pointsUniforms.size.value = 40.0
+    pointsUniforms.size.value = 50.0
 
     let shaderSource = THREE.ShaderLib['basic']
 
@@ -214,8 +224,9 @@ const glslify = require('glslify');
         vertexShader: glslify('./glsl/tetra.vert'),
         fragmentShader: glslify('./glsl/tetra.frag'),
         transparent: true,
-        wireframe: true
-        // blending: THREE.AdditiveBlending
+        wireframe: true,
+        blending: THREE.AdditiveBlending,
+        depthTest: false
       })
 
       pointMaterials[channel] = new THREE.ShaderMaterial({
@@ -242,13 +253,13 @@ const glslify = require('glslify');
       return
     }
 
-    let animTime = 5000 + Math.random() * 30000
+    let animTime = 5000 + Math.random() * 10000
 
     cameraAnimating = true
 
     camMovementTriggered = true
 
-    let to = new THREE.Vector3(0, Math.max(Math.random() * 4, 1.5), Math.max(Math.random() * 3, 1.5))
+    let to = new THREE.Vector3(0, Math.max(Math.random() * 2.5, 0.8), Math.max(Math.random() * 2.0, 0.8))
 
     camMoveTween = new TWEEN.Tween(camera.position)
       .to(to, animTime)
@@ -521,64 +532,66 @@ const glslify = require('glslify');
         loader.classList.toggle('hide')
       }
 
-      freqData = analyser.getFrequencyData()
+      if (!isPaused) {
+        freqData = analyser.getFrequencyData()
 
-      for (let channel = 0; channel < channelCount; channel++) {
-        switch (channel) {
-          case 0:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000000005
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000000005
-            break
-          case 1:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.000000000000000000000001
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.000000000000000000000001
-            break
-          case 2:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            break
-          case 3:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            break
-          case 4:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            break
-          case 5:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            break
-          case 6:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            break
-          case 7:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
-            break
-          case 8:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
-            break
-          case 9:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
-            break
-          default:
-            materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
-            pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
-            break
+        for (let channel = 0; channel < channelCount; channel++) {
+          switch (channel) {
+            case 0:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000000005
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000000005
+              break
+            case 1:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.000000000000000000000001
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.000000000000000000000001
+              break
+            case 2:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              break
+            case 3:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              break
+            case 4:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              break
+            case 5:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              break
+            case 6:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              break
+            case 7:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.00000000000000000000001
+              break
+            case 8:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
+              break
+            case 9:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
+              break
+            default:
+              materials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
+              pointMaterials[channel].uniforms.uFreq.value = Math.pow(freqData[channel + 2], 10) * 0.0000000000000000000001
+              break
+          }
+
+          if (Math.pow(freqData[2], 10) > 950000000000000000000000) {
+            animateCamPos()
+          }
+
+          materials[channel].uniforms.uTime.value = currentFrame
+          pointMaterials[channel].uniforms.uTime.value = currentFrame
+
+          grow(initFaces[channel], channel)
         }
-
-        if (Math.pow(freqData[2], 10) > 1000000000000000000000000) {
-          animateCamPos()
-        }
-
-        materials[channel].uniforms.uTime.value = currentFrame
-        pointMaterials[channel].uniforms.uTime.value = currentFrame
-
-        grow(initFaces[channel], channel)
       }
 
       renderer.render(scene, camera)

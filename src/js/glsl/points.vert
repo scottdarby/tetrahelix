@@ -14,4 +14,9 @@ void main() {
 	gl_PointSize = size;
 	gl_PointSize *= ( scale / - mvPosition.z );
 	gl_PointSize *= clamp(length(transformed) * 2.0, 0.0, 3.0);
+
+	if (gl_PointSize < 50.0) {
+		gl_PointSize = 0.0;
+	}
+
 }
